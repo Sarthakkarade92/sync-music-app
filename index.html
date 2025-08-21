@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sync Music - Listen Together</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .room-setup {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        input {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .room-info {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .room-code {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd54f;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .status {
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status.connected {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4caf50;
+        }
+
+        .status.waiting {
+            background: rgba(255, 193, 7, 0.3);
+            border: 2px solid #ffc107;
+        }
+
+        .player-container {
+            margin-top: 20px;
+        }
+
+        .player-wrapper {
+            position: relative;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .video-display {
+            width: 100%;
+            height: 315px;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-display iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .video-placeholder {
+            text-align: center;
+            color: white;
+        }
+
+        .video-placeholder h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .song-info {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .song-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .sync-status {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .playlist-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .playlist-info h4 {
+            margin-bottom: 10px;
+            color: #ffd54f;
+        }
+
+        .song-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .song-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .song-list li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+
+        .song-list li.current {
+            background: rgba(255, 107, 107, 0.3);
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Sync Music</h1>
+            <p>Listen to YouTube playlists together, perfectly synchronized</p>
+        </div>
+
+        <div id="setupScreen" class="card">
+            <div class="room-setup">
+                <h2 style="text-align: center; margin-bottom: 20px;">Get Started</h2>
+                
+                <div class="input-group">
+                    <label for="playlistUrl">YouTube Playlist URL:</label>
+                    <input type="url" id="playlistUrl" placeholder="https://www.youtube.com/playlist?list=..." />
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="createRoom()">🚀 Create Room</button>
+                    <button class="btn-secondary" onclick="showJoinForm()">👥 Join Room</button>
+                </div>
+
+                <div id="joinForm" class="hidden">
+                    <div class="input-group" style="margin-top: 20px;">
+                        <label for="roomCode">Room Code:</label>
+                        <input type="text" id="roomCode" placeholder="Enter 6-digit room code" maxlength="6" />
+                        <button class="btn-primary" onclick="joinRoom()" style="margin-top: 10px;">Join Room</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="roomScreen" class="hidden">
+            <div class="room-info card">
+                <h3>Room Code</h3>
+                <div class="room-code" id="displayRoomCode">------</div>
+                <p>Share this code with your partner</p>
+                <div class="status waiting" id="connectionStatus">
+                    Waiting for partner to join...
+                </div>
+            </div>
+
+            <div class="card player-container">
+                <div class="playlist-info">
+                    <h4>🎵 Current Playlist</h4>
+                    <ul class="song-list" id="songList">
+                        <li class="current">🎵 Rick Astley - Never Gonna Give You Up</li>
+                        <li>🎵 Luis Fonsi - Despacito ft. Daddy Yankee</li>
+                        <li>🎵 Ed Sheeran - Shape of You</li>
+                    </ul>
+                </div>
+
+                <div class="player-wrapper">
+                    <div class="video-display" id="videoDisplay">
+                        <div class="video-placeholder">
+                            <h3>🎵 Ready to Sync</h3>
+                            <p>Click play to start the synchronized experience!</p>
+                            <p style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">
+                                Note: This demo uses embedded YouTube players for synchronized playback
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="song-info">
+                    <div class="song-title" id="currentSong">Rick Astley - Never Gonna Give You Up</div>
+                    <div class="sync-status" id="syncStatus">Ready to sync</div>
+                </div>
+
+                <div class="controls">
+                    <button class="control-btn" onclick="previousSong()" title="Previous">⏮</button>
+                    <button class="control-btn" onclick="togglePlayPause()" id="playPauseBtn" title="Play/Pause">▶</button>
+                    <button class="control-btn" onclick="nextSong()" title="Next">⏭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let isHost = false;
+        let roomCode = '';
+        let currentVideoIndex = 0;
+        let isPlaying = false;
+        let isPlayerReady = false;
+        
+        const videos = [
+            {
+                videoId: 'dQw4w9WgXcQ',
+                title: 'Rick Astley - Never Gonna Give You Up',
+                embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+            },
+            {
+                videoId: 'kJQP7kiw5Fk',
+                title: 'Luis Fonsi - Despacito ft. Daddy Yankee',
+                embedUrl: 'https://www.youtube.com/embed/kJQP7kiw5Fk'
+            },
+            {
+                videoId: 'JGwWNGJdvx8',
+                title: 'Ed Sheeran - Shape of You',
+                embedUrl: 'https://www.youtube.com/embed/JGwWNGJdvx8'
+            }
+        ];
+
+        // Mock WebSocket for demo
+        const mockSocket = {
+            emit: (event, data) => {
+                console.log('🚀 Emit:', event, data);
+                // Simulate receiving events from partner
+                setTimeout(() => {
+                    if (event === 'sync-play') {
+                        handlePartnerPlay(data);
+                    } else if (event === 'sync-pause') {
+                        handlePartnerPause();
+                    } else if (event === 'sync-next') {
+                        handlePartnerNext();
+                    } else if (event === 'sync-prev') {
+                        handlePartnerPrev();
+                    }
+                }, 100);
+            }
+        };
+
+        function generateRoomCode() {
+            return Math.random().toString(36).substr(2, 6).toUpperCase();
+        }
+
+        function extractPlaylistId(url) {
+            const match = url.match(/[?&]list=([^&]+)/);
+            return match ? match[1] : null;
+        }
+
+        function createRoom() {
+            const playlistUrl = document.getElementById('playlistUrl').value;
+            
+            isHost = true;
+            roomCode = generateRoomCode();
+            
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('roomScreen').classList.remove('hidden');
+            document.getElementById('displayRoomCode').textContent = roomCode;
+            
+            initializePlayer();
+            
+            // Simulate partner joining after 3 seconds
+            setTimeout(() => {
+                document.getElementById('connectionStatus').textContent = 'Partner connected! 🎉';
+                document.getElementById('connectionStatus').className = 'status connected';
+            }, 3000);
+        }
+
+        function showJoinForm() {
+            document.getElementById('joinForm').classList.toggle('hidden');
+        }
+
+        function joinRoom() {
+            const code = document.getElementById('roomCode').value;
+            if (!code || code.length !== 6) {
+                alert('Please enter a valid 6-digit room code');
+                return;
+            }
+
+            isHost = false;
+            roomCode = code;
+            
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('roomScreen').classList.remove('hidden');
+            document.getElementById('displayRoomCode').textContent = roomCode;
+            document.getElementById('connectionStatus').textContent = 'Connected to room! 🎉';
+            document.getElementById('connectionStatus').className = 'status connected';
+            
+            initializePlayer();
+        }
+
+        function initializePlayer() {
+            console.log('🎵 Initializing player...');
+            isPlayerReady = true;
+            updateSongInfo();
+            updateSyncStatus();
+            
+            // Show current song in playlist
+            updatePlaylistDisplay();
+        }
+
+        function updateSongInfo() {
+            const currentVideo = videos[currentVideoIndex];
+            document.getElementById('currentSong').textContent = currentVideo.title;
+        }
+
+        function updateSyncStatus() {
+            const status = document.getElementById('syncStatus');
+            if (isHost) {
+                status.textContent = '🎵 You are hosting - Others sync to you';
+            } else {
+                status.textContent = '🎵 Synced with host';
+            }
+        }
+
+        function updatePlaylistDisplay() {
+            const songItems = document.querySelectorAll('#songList li');
+            songItems.forEach((item, index) => {
+                if (index === currentVideoIndex) {
+                    item.className = 'current';
+                } else {
+                    item.className = '';
+                }
+            });
+        }
+
+        function loadCurrentVideo() {
+            const currentVideo = videos[currentVideoIndex];
+            const videoDisplay = document.getElementById('videoDisplay');
+            
+            // Create YouTube embed
+            videoDisplay.innerHTML = `
+                <iframe 
+                    src="${currentVideo.embedUrl}?autoplay=${isPlaying ? 1 : 0}&controls=1&modestbranding=1&rel=0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+            `;
+            
+            updateSongInfo();
+            updatePlaylistDisplay();
+        }
+
+        function togglePlayPause() {
+            if (!isPlayerReady) return;
+            
+            isPlaying = !isPlaying;
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            
+            if (isPlaying) {
+                playPauseBtn.textContent = '⏸';
+                loadCurrentVideo(); // Load with autoplay
+                
+                if (isHost) {
+                    mockSocket.emit('sync-play', {
+                        videoIndex: currentVideoIndex,
+                        timestamp: Date.now()
+                    });
+                }
+            } else {
+                playPauseBtn.textContent = '▶';
+                
+                if (isHost) {
+                    mockSocket.emit('sync-pause');
+                }
+            }
+            
+            console.log(`🎵 ${isPlaying ? 'Playing' : 'Paused'}: ${videos[currentVideoIndex].title}`);
+        }
+
+        function nextSong() {
+            if (!isPlayerReady) return;
+            
+            currentVideoIndex = (currentVideoIndex + 1) % videos.length;
+            
+            if (isPlaying) {
+                loadCurrentVideo();
+            } else {
+                updateSongInfo();
+                updatePlaylistDisplay();
+            }
+            
+            if (isHost) {
+                mockSocket.emit('sync-next', {
+                    videoIndex: currentVideoIndex
+                });
+            }
+            
+            console.log('⏭ Next song:', videos[currentVideoIndex].title);
+        }
+
+        function previousSong() {
+            if (!isPlayerReady) return;
+            
+            currentVideoIndex = currentVideoIndex === 0 ? videos.length - 1 : currentVideoIndex - 1;
+            
+            if (isPlaying) {
+                loadCurrentVideo();
+            } else {
+                updateSongInfo();
+                updatePlaylistDisplay();
+            }
+            
+            if (isHost) {
+                mockSocket.emit('sync-prev', {
+                    videoIndex: currentVideoIndex
+                });
+            }
+            
+            console.log('⏮ Previous song:', videos[currentVideoIndex].title);
+        }
+
+        // Handle partner events (for non-hosts)
+        function handlePartnerPlay(data) {
+            if (!isHost && isPlayerReady) {
+                currentVideoIndex = data.videoIndex;
+                isPlaying = true;
+                document.getElementById('playPauseBtn').textContent = '⏸';
+                loadCurrentVideo();
+                console.log('🎵 Partner started playing:', videos[currentVideoIndex].title);
+            }
+        }
+
+        function handlePartnerPause() {
+            if (!isHost && isPlayerReady) {
+                isPlaying = false;
+                document.getElementById('playPauseBtn').textContent = '▶';
+                console.log('⏸ Partner paused playback');
+            }
+        }
+
+        function handlePartnerNext() {
+            if (!isHost && isPlayerReady) {
+                currentVideoIndex = (currentVideoIndex + 1) % videos.length;
+                if (isPlaying) {
+                    loadCurrentVideo();
+                } else {
+                    updateSongInfo();
+                    updatePlaylistDisplay();
+                }
+                console.log('⏭ Partner skipped to:', videos[currentVideoIndex].title);
+            }
+        }
+
+        function handlePartnerPrev() {
+            if (!isHost && isPlayerReady) {
+                currentVideoIndex = currentVideoIndex === 0 ? videos.length - 1 : currentVideoIndex - 1;
+                if (isPlaying) {
+                    loadCurrentVideo();
+                } else {
+                    updateSongInfo();
+                    updatePlaylistDisplay();
+                }
+                console.log('⏮ Partner went back to:', videos[currentVideoIndex].title);
+            }
+        }
+
+        // Allow clicking on playlist items
+        document.addEventListener('DOMContentLoaded', function() {
+            const songItems = document.querySelectorAll('#songList li');
+            songItems.forEach((item, index) => {
+                item.addEventListener('click', function() {
+                    if (!isPlayerReady) return;
+                    
+                    currentVideoIndex = index;
+                    if (isPlaying) {
+                        loadCurrentVideo();
+                    } else {
+                        updateSongInfo();
+                        updatePlaylistDisplay();
+                    }
+                    
+                    console.log('🎵 Selected song:', videos[currentVideoIndex].title);
+                });
+            });
+        });
+
+        console.log('🎵 Sync Music App Loaded - Ready to rock!');
+    </script>
+</body>
+</html>
