@@ -1,535 +1,875 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎵 Sync Music</title>
-  <meta name="description" content="A synchronized music listening app demo with mock real-time sync and a visual player (no YouTube iframes)." />
-  <style>
-    :root{
-      --purple-1:#667eea; /* primary */
-      --purple-2:#764ba2; /* primary */
-      --accent-1:#ff6b6b; /* coral */
-      --accent-2:#ffd54f; /* amber */
-      --glass-bg:rgba(255,255,255,.12);
-      --glass-border:rgba(255,255,255,.30);
-      --text:#ffffff;
-      --muted:#e9e9f6;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; overflow-x:hidden; color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background:#1a1130;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sync Music - Listen Together</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    /* Background image + gradient overlay */
-    .bg{
-      position:fixed; inset:0; z-index:-2;
-      background:url('https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=2400&auto=format&fit=crop') center/cover no-repeat fixed;
-      filter: blur(3px) brightness(0.4);
-      transform:scale(1.05);
-    }
-    .gradient{
-      position:fixed; inset:0; z-index:-1;
-      background:linear-gradient(135deg, rgba(102,126,234,0.70) 0%, rgba(118,75,162,0.70) 100%);
-    }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            color: white;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
 
-    /* Global layout */
-    header{
-      width:100%; padding:24px 20px 8px; text-align:center;
-      text-shadow:0 6px 22px rgba(0,0,0,.45), 0 0 2px rgba(0,0,0,.6);
-    }
-    .title{font-size:clamp(28px,3vw,42px); margin:0 0 6px; letter-spacing:.4px}
-    .tagline{opacity:.9; margin:0; font-weight:500}
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(3px) brightness(0.4);
+            z-index: -2;
+            transition: background-image 0.5s ease;
+        }
 
-    .container{
-      max-width:1100px; margin:18px auto 64px; padding:0 16px; display:grid; gap:18px;
-      grid-template-columns: 1.1fr .9fr;
-    }
-    @media (max-width: 940px){ .container{grid-template-columns:1fr} }
+        .background-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.7) 0%, rgba(118, 75, 162, 0.7) 100%);
+            z-index: -1;
+        }
 
-    /* Glass cards */
-    .card{
-      background:var(--glass-bg);
-      border:1px solid var(--glass-border);
-      border-radius:22px; padding:18px 18px;
-      box-shadow: 0 10px 40px rgba(0,0,0,.25), inset 0 0 40px rgba(255,255,255,.03);
-      backdrop-filter: blur(15px) saturate(130%);
-    }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
 
-    /* Setup screen */
-    .setup{display:grid; gap:14px}
-    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-    .input{
-      flex:1 1 300px; padding:14px 14px; border-radius:14px; border:1px solid rgba(255,255,255,.25);
-      background:rgba(255,255,255,.08); color:var(--text); outline:none;
-      box-shadow: inset 0 2px 6px rgba(0,0,0,.2);
-    }
-    .btn{
-      appearance:none; border:1px solid rgba(255,255,255,.3); color:white;
-      background:linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
-      padding:12px 16px; border-radius:12px; cursor:pointer; font-weight:700;
-      transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
-      box-shadow: 0 10px 24px rgba(0,0,0,.25);
-    }
-    .btn:hover{ transform:translateY(-2px) scale(1.02); box-shadow:0 14px 36px rgba(0,0,0,.35)}
-    .btn:active{ transform:translateY(0) scale(.98)}
-    .btn.primary{ background:linear-gradient(135deg, var(--purple-1), var(--purple-2)); border-color:rgba(255,255,255,.45)}
-    .btn.alt{ background:linear-gradient(135deg, var(--accent-1), var(--accent-2)); color:#2b2633 }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-    .hint{opacity:.9; font-size:.95rem}
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+            color: #fff;
+        }
 
-    /* Room screen layout */
-    .room.hidden, .setup.hidden{ display:none }
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+        }
 
-    .statusBar{
-      display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:10px
-    }
-    .pill{
-      display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.32); background:rgba(255,255,255,.10);
-      font-weight:600; box-shadow: inset 0 0 20px rgba(255,255,255,.06)
-    }
-    .dot{width:10px; height:10px; border-radius:50%; background:#c0c0c0; box-shadow:0 0 10px currentColor}
-    .dot.wait{ background:#ffd54f }
-    .dot.ok{ background:#3de57a }
-    .dot.err{ background:#ff6b6b }
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
 
-    .roomGrid{ display:grid; gap:18px; grid-template-columns: 1.2fr .8fr }
-    @media (max-width: 940px){ .roomGrid{ grid-template-columns:1fr } }
+        .room-setup {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-    /* Player card */
-    .player{
-      display:grid; grid-template-columns: 140px 1fr; gap:16px; align-items:center;
-    }
-    @media (max-width:560px){ .player{grid-template-columns: 110px 1fr} }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
 
-    .discWrap{ position:relative; width:140px; height:140px; }
-    .disc{ position:absolute; inset:0; border-radius:50%;
-      background:
-        radial-gradient(circle at 50% 50%, #111 0 12%, #222 13% 32%, #111 33% 100%),
-        radial-gradient(circle at 50% 50%, #333 0 50%, #111 51% 100%);
-      box-shadow: inset 0 0 30px rgba(0,0,0,.7), 0 12px 40px rgba(0,0,0,.45);
-      animation: spin 6s linear infinite; animation-play-state: paused;
-    }
-    .disc::after{content:""; position:absolute; inset:45% 45%; border-radius:50%; background:var(--accent-2); box-shadow:0 0 12px rgba(0,0,0,.6) inset}
-    .disc.playing{ animation-play-state: running }
+        label {
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
 
-    @keyframes spin{ to{ transform: rotate(360deg)} }
+        input[type="url"], input[type="text"] {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
 
-    .meta b{ display:block; font-size:1.05rem; letter-spacing:.2px }
-    .meta small{ opacity:.9 }
+        input[type="file"] {
+            padding: 10px;
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.9rem;
+        }
 
-    .waves{ display:flex; align-items:flex-end; gap:6px; height:42px; margin-top:8px }
-    .bar{ width:8px; border-radius:6px; background:linear-gradient(180deg, var(--accent-2), var(--accent-1));
-      height:8px; opacity:.55; animation: bounce 1.2s ease-in-out infinite; animation-play-state: paused;
-      box-shadow:0 6px 18px rgba(0,0,0,.35)
-    }
-    .bar:nth-child(1){ animation-delay:0s }
-    .bar:nth-child(2){ animation-delay:.1s }
-    .bar:nth-child(3){ animation-delay:.2s }
-    .bar:nth-child(4){ animation-delay:.3s }
-    .bar:nth-child(5){ animation-delay:.4s }
-    @keyframes bounce{ 0%,100%{ height:8px } 50%{ height:42px } }
-    .playing + .meta + .waves .bar, .waves.playing .bar{ animation-play-state: running; opacity:1 }
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
 
-    /* Controls */
-    .controls{ display:flex; gap:14px; align-items:center; margin-top:12px; flex-wrap:wrap }
-    .cbtn{
-      width:54px; height:54px; border-radius:999px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.35);
-      background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.07));
-      box-shadow: 0 10px 24px rgba(0,0,0,.35), inset 0 -6px 10px rgba(0,0,0,.35), inset 0 8px 10px rgba(255,255,255,.05);
-      cursor:pointer; font-size:20px; transition:transform .12s ease, box-shadow .2s ease, filter .2s ease
-    }
-    .cbtn:hover{ transform: translateY(-2px) scale(1.04); box-shadow:0 14px 36px rgba(0,0,0,.45); filter: drop-shadow(0 0 8px rgba(255,255,255,.3)) }
-    .cbtn:active{ transform:translateY(0) scale(.98) }
-    .cbtn.primary{ border-color:rgba(255,255,255,.6) }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
 
-    .openYT{ margin-left:auto }
-    .openYT .btn{ padding:10px 14px }
+        button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
 
-    /* Playlist */
-    .playlist{ max-height:360px; overflow:auto; padding-right:6px }
-    .playlist::-webkit-scrollbar{ width:8px }
-    .playlist::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.25); border-radius:12px }
-    .track{ display:flex; gap:10px; padding:10px 12px; border-radius:12px; align-items:center; cursor:pointer;
-      border:1px solid transparent; transition: background .2s ease, border-color .2s ease, transform .1s ease
-    }
-    .track:hover{ background:rgba(255,255,255,.08); transform:translateY(-1px) }
-    .track.active{ background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.35) }
-    .track .idx{ width:28px; height:28px; border-radius:8px; display:grid; place-items:center; font-weight:700;
-      background:linear-gradient(135deg, var(--purple-1), var(--purple-2)) }
-    .track .title{ font-weight:700 }
-    .track .artist{ opacity:.85 }
+        .btn-primary {
+            background: #ff6b6b;
+            color: white;
+        }
 
-    /* Footer */
-    footer{ text-align:center; opacity:.9; padding:14px; font-size:.95rem }
+        .btn-primary:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
 
-    /* Mobile tweaks */
-    @media (max-width:540px){
-      .controls{ flex-direction:column; align-items:stretch }
-      .openYT{ width:100%; margin-left:0 }
-      .cbtn{ width:58px; height:58px }
-      .discWrap{ width:110px; height:110px }
-    }
-  </style>
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .room-info {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .room-code {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd54f;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
+            margin: 10px 0;
+        }
+
+        .status {
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .status.connected {
+            background: rgba(76, 175, 80, 0.4);
+            border: 2px solid #4caf50;
+            color: #e8f5e8;
+        }
+
+        .status.waiting {
+            background: rgba(255, 193, 7, 0.4);
+            border: 2px solid #ffc107;
+            color: #fff8e1;
+        }
+
+        .sync-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .sync-timer {
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .player-container {
+            margin-top: 20px;
+        }
+
+        .player-wrapper {
+            position: relative;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .video-display {
+            width: 100%;
+            height: 350px;
+            border-radius: 10px;
+            background: linear-gradient(45deg, rgba(255, 107, 107, 0.3), rgba(78, 205, 196, 0.3));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .video-display iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .video-placeholder {
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .video-placeholder h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .song-info {
+            text-align: center;
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .song-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #ffd54f;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .song-progress {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ff6b6b;
+            border-radius: 2px;
+            transition: width 0.1s ease;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.active {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+
+        .playlist-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .playlist-info h4 {
+            margin-bottom: 15px;
+            color: #ffd54f;
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .song-list {
+            list-style: none;
+            padding: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .song-list li {
+            padding: 12px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .song-list li:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+
+        .song-list li.current {
+            background: rgba(255, 107, 107, 0.4);
+            border: 2px solid #ff6b6b;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .connection-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .connection-indicator.connected {
+            background: rgba(76, 175, 80, 0.7);
+        }
+
+        .connection-indicator.disconnected {
+            background: rgba(244, 67, 54, 0.7);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+
+            .video-display {
+                height: 250px;
+            }
+
+            .sync-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* Custom scrollbar */
+        .song-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .song-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .song-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+    </style>
 </head>
 <body>
-  <div class="bg" aria-hidden="true"></div>
-  <div class="gradient" aria-hidden="true"></div>
+    <div class="background-overlay" id="backgroundOverlay"></div>
+    <div class="background-gradient"></div>
+    
+    <div class="connection-indicator" id="connectionIndicator">
+        🔌 Connecting...
+    </div>
 
-  <header>
-    <h1 class="title">🎵 Sync Music</h1>
-    <p class="tagline">Listen together in real-time — room codes, mock sync, and a slick visual player. No iframes needed.</p>
-  </header>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Sync Music</h1>
+            <p>Listen to music together, perfectly synchronized in real-time</p>
+        </div>
 
-  <!-- SETUP SCREEN -->
-  <main class="container">
-    <section id="setupCard" class="card setup" aria-label="Setup">
-      <h2 style="margin:2px 0 6px">Start a session</h2>
-      <div class="row">
-        <input id="playlistInput" type="url" class="input" placeholder="Paste YouTube playlist URL (optional)" />
-        <button class="btn primary" onclick="createRoom()">Create Room</button>
-        <button class="btn alt" onclick="joinFlow()">Join Room</button>
-      </div>
-      <p class="hint">We use a <b>mock real‑time socket</b> to simulate syncing. Visual player only; click <em>Open in YouTube</em> for the actual videos.</p>
-      <div id="joinRow" class="row" style="display:none">
-        <input id="joinCode" class="input" placeholder="Enter 6‑digit room code" inputmode="numeric" maxlength="6" />
-        <button class="btn" onclick="joinRoom()">Join</button>
-      </div>
-    </section>
-
-    <!-- ROOM SCREEN (initially hidden) -->
-    <section id="roomCard" class="card room hidden" aria-label="Room">
-      <div class="statusBar">
-        <div class="pill"><span id="statusDot" class="dot wait"></span><span id="statusText">Waiting for partner…</span></div>
-        <div class="pill">Room <b id="roomCode">— — — — — —</b></div>
-        <div class="pill">Latency <b id="latency">—</b> ms</div>
-      </div>
-
-      <div class="roomGrid">
-        <!-- Player left -->
-        <div class="playerWrap">
-          <div class="player">
-            <div class="discWrap">
-              <div id="disc" class="disc" aria-hidden="true"></div>
-            </div>
-            <div>
-              <div class="meta">
-                <b id="songTitle">—</b>
-                <small id="songArtist">—</small>
-              </div>
-              <div id="waves" class="waves" aria-hidden="true">
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-              </div>
-
-              <div class="controls">
-                <button class="cbtn" title="Previous" onclick="previousSong()">⏮</button>
-                <button id="playBtn" class="cbtn primary" title="Play/Pause" onclick="togglePlayPause()">▶</button>
-                <button class="cbtn" title="Next" onclick="nextSong()">⏭</button>
-
-                <div class="openYT">
-                  <button class="btn" onclick="openInYouTube()">Open in YouTube ↗</button>
+        <div id="setupScreen" class="card">
+            <div class="room-setup">
+                <h2 style="text-align: center; margin-bottom: 20px;">🚀 Get Started</h2>
+                
+                <div class="input-group">
+                    <label for="playlistUrl">🎵 YouTube Playlist URL:</label>
+                    <input type="url" id="playlistUrl" placeholder="https://www.youtube.com/playlist?list=..." />
                 </div>
-              </div>
+
+                <div class="input-group">
+                    <label for="backgroundImage">🖼️ Friend's Background Image (Optional):</label>
+                    <input type="file" id="backgroundImage" accept="image/*" />
+                    <small style="opacity: 0.8; font-size: 0.9rem;">Upload your friend's photo to set as background</small>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="createRoom()">🚀 Create Room</button>
+                    <button class="btn-secondary" onclick="showJoinForm()">👥 Join Room</button>
+                </div>
+
+                <div id="joinForm" class="hidden">
+                    <div class="input-group" style="margin-top: 20px;">
+                        <label for="roomCode">🔑 Room Code:</label>
+                        <input type="text" id="roomCode" placeholder="Enter 6-digit room code" maxlength="6" />
+                        <button class="btn-primary" onclick="joinRoom()" style="margin-top: 10px;">Join Room</button>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          <div style="margin-top:10px; opacity:.9">
-            <small id="nowText">Ready.</small>
-          </div>
         </div>
 
-        <!-- Playlist right -->
-        <div>
-          <h3 style="margin:0 0 10px">Playlist</h3>
-          <div id="playlist" class="playlist"></div>
+        <div id="roomScreen" class="hidden">
+            <div class="room-info card">
+                <h3>🎵 Room Code</h3>
+                <div class="room-code" id="displayRoomCode">------</div>
+                <p>Share this code with your friend</p>
+                <div class="status waiting" id="connectionStatus">
+                    🔍 Waiting for friend to join...
+                </div>
+            </div>
+
+            <div class="card player-container">
+                <div class="sync-info">
+                    <div>
+                        <strong>⚡ Real-time Sync:</strong> <span id="syncMode">Host Mode</span>
+                    </div>
+                    <div class="sync-timer" id="syncTimer">00:00</div>
+                    <div>
+                        <strong>📡 Latency:</strong> <span id="latencyDisplay">< 50ms</span>
+                    </div>
+                </div>
+
+                <div class="playlist-info">
+                    <h4>🎵 Now Playing</h4>
+                    <ul class="song-list" id="songList">
+                        <li class="current">🎵 Amazing Song #1 - Artist</li>
+                        <li>🎵 Beautiful Track #2 - Musician</li>
+                        <li>🎵 Awesome Music #3 - Band</li>
+                        <li>🎵 Great Melody #4 - Singer</li>
+                        <li>🎵 Perfect Harmony #5 - Composer</li>
+                    </ul>
+                </div>
+
+                <div class="player-wrapper">
+                    <div class="video-display" id="videoDisplay">
+                        <div class="video-placeholder">
+                            <h3>🎵 Ready for Synchronized Music</h3>
+                            <p>Click play to start listening together!</p>
+                            <p style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">
+                                ⚡ Real-time sync with < 100ms delay
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="song-info">
+                    <div class="song-title" id="currentSong">🎵 Amazing Song #1 - Artist</div>
+                    <div class="song-progress">
+                        <span id="currentTime">0:00</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span id="totalTime">3:45</span>
+                    </div>
+                    <div style="font-size: 0.9rem; opacity: 0.8; margin-top: 8px;" id="syncStatus">🔄 Synchronized with friend</div>
+                </div>
+
+                <div class="controls">
+                    <button class="control-btn" onclick="previousSong()" title="Previous Song" id="prevBtn">⏮</button>
+                    <button class="control-btn" onclick="togglePlayPause()" id="playPauseBtn" title="Play/Pause">▶</button>
+                    <button class="control-btn" onclick="nextSong()" title="Next Song" id="nextBtn">⏭</button>
+                    <button class="control-btn" onclick="toggleMute()" id="muteBtn" title="Mute/Unmute">🔊</button>
+                </div>
+            </div>
         </div>
-      </div>
-    </section>
-  </main>
+    </div>
 
-  <footer>Built for portfolios and demos • Glassmorphism • Mock WebSocket sync • © 2025</footer>
+    <script>
+        // Enhanced global variables for real-time sync
+        let isHost = false;
+        let roomCode = '';
+        let currentVideoIndex = 0;
+        let isPlaying = false;
+        let isPlayerReady = false;
+        let isMuted = false;
+        let currentTime = 0;
+        let totalTime = 225; // 3:45 in seconds
+        let syncOffset = 0;
+        let lastSyncTime = 0;
+        let connectionLatency = 45;
+        
+        // Mock playlist data
+        const mockPlaylist = [
+            {
+                videoId: 'mock1',
+                title: 'Amazing Song #1 - Artist',
+                embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1',
+                duration: '3:45'
+            },
+            {
+                videoId: 'mock2', 
+                title: 'Beautiful Track #2 - Musician',
+                embedUrl: 'https://www.youtube.com/embed/kJQP7kiw5Fk?enablejsapi=1',
+                duration: '4:12'
+            },
+            {
+                videoId: 'mock3',
+                title: 'Awesome Music #3 - Band', 
+                embedUrl: 'https://www.youtube.com/embed/JGwWNGJdvx8?enablejsapi=1',
+                duration: '3:53'
+            },
+            {
+                videoId: 'mock4',
+                title: 'Great Melody #4 - Singer',
+                embedUrl: 'https://www.youtube.com/embed/L_jWHffIx5E?enablejsapi=1',
+                duration: '4:02'
+            },
+            {
+                videoId: 'mock5',
+                title: 'Perfect Harmony #5 - Composer',
+                embedUrl: 'https://www.youtube.com/embed/fJ9rUzIMcZQ?enablejsapi=1', 
+                duration: '3:28'
+            }
+        ];
 
-<script>
-// -------------------------------
-// Utilities
-// -------------------------------
-const $ = (q)=>document.querySelector(q);
-const $$ = (q)=>Array.from(document.querySelectorAll(q));
-function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-function clamp(n,min,max){ return Math.min(max,Math.max(min,n)); }
+        // Enhanced WebSocket simulation with real-time features
+        const mockSocket = {
+            emit: (event, data) => {
+                console.log('🚀 Emit:', event, data);
+                // Simulate network latency
+                const latency = Math.random() * 100 + 20; // 20-120ms
+                connectionLatency = Math.round(latency);
+                updateLatencyDisplay();
+                
+                setTimeout(() => {
+                    // Simulate partner response
+                    if (event === 'sync-play') {
+                        handlePartnerPlay(data);
+                    } else if (event === 'sync-pause') {
+                        handlePartnerPause();
+                    } else if (event === 'sync-seek') {
+                        handlePartnerSeek(data);
+                    } else if (event === 'sync-next') {
+                        handlePartnerNext();
+                    } else if (event === 'sync-prev') {
+                        handlePartnerPrev();
+                    }
+                }, latency);
+            },
+            
+            on: (event, callback) => {
+                console.log('👂 Listening for:', event);
+            }
+        };
 
-// -------------------------------
-// Mock Socket (roomed, 2 peers max)
-// -------------------------------
-const mockSocket = (()=>{
-  const rooms = new Map(); // code -> { peers:Set(fn), lastLatency:number }
-  let myHandlers = {};
-  let myRoom = null;
-  let myId = Math.random().toString(36).slice(2,9);
+        function generateRoomCode() {
+            return Math.random().toString(36).substr(2, 6).toUpperCase();
+        }
 
-  function on(event, handler){ (myHandlers[event] ||= []).push(handler); }
-  function off(event, handler){ myHandlers[event] = (myHandlers[event]||[]).filter(h=>h!==handler); }
-  function _emitLocal(event, payload){ (myHandlers[event]||[]).forEach(h=>h(payload)); }
+        function handleBackgroundImage() {
+            const fileInput = document.getElementById('backgroundImage');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const backgroundOverlay = document.getElementById('backgroundOverlay');
+                    backgroundOverlay.style.backgroundImage = `url(${e.target.result})`;
+                    console.log('🖼️ Background image set');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
 
-  function join(code){
-    if(!rooms.has(code)) rooms.set(code, { peers:new Set(), lastLatency:0 });
-    myRoom = code; rooms.get(code).peers.add(_emitLocal);
-    // Simulate partner connect
-    setTimeout(()=>broadcast('peer:joined', { id: myId }), 60);
-    return true;
-  }
-  function leave(){ if(myRoom && rooms.has(myRoom)){ rooms.get(myRoom).peers.delete(_emitLocal); } myRoom=null; }
+        function createRoom() {
+            const playlistUrl = document.getElementById('playlistUrl').value;
+            handleBackgroundImage();
+            
+            isHost = true;
+            roomCode = generateRoomCode();
+            
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('roomScreen').classList.remove('hidden');
+            document.getElementById('displayRoomCode').textContent = roomCode;
+            document.getElementById('syncMode').textContent = 'Host Mode - Others sync to you';
+            
+            initializePlayer();
+            updateConnectionStatus('waiting');
+            
+            // Simulate friend joining
+            setTimeout(() => {
+                updateConnectionStatus('connected');
+                console.log('🎉 Friend connected to room!');
+            }, 4000);
+        }
 
-  function networkLatency(){ // 40-180ms
-    return Math.floor(40 + Math.random()*140);
-  }
+        function showJoinForm() {
+            document.getElementById('joinForm').classList.toggle('hidden');
+        }
 
-  function broadcast(event, payload){
-    if(!myRoom) return;
-    const room = rooms.get(myRoom); if(!room) return;
-    const lag = networkLatency(); room.lastLatency = lag;
-    setTimeout(()=>{
-      room.peers.forEach(emit=>{ if(emit!==_emitLocal) emit({ event, payload, from: myId, ts: Date.now() }); });
-      // loopback for latency readback if needed
-    }, lag);
-    // locally notify as well for optimistic UI
-    _emitLocal({ event, payload, from: myId, ts: Date.now(), local:true });
-    // update latency pill
-    const latEl = document.getElementById('latency'); if(latEl) latEl.textContent = lag;
-  }
+        function joinRoom() {
+            const code = document.getElementById('roomCode').value;
+            if (!code || code.length !== 6) {
+                alert('Please enter a valid 6-digit room code');
+                return;
+            }
 
-  return { on, off, join, leave, broadcast };
-})();
+            handleBackgroundImage();
+            isHost = false;
+            roomCode = code;
+            
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('roomScreen').classList.remove('hidden');
+            document.getElementById('displayRoomCode').textContent = roomCode;
+            document.getElementById('syncMode').textContent = 'Guest Mode - Syncing with host';
+            
+            initializePlayer();
+            updateConnectionStatus('connected');
+        }
 
-// -------------------------------
-// App State
-// -------------------------------
-const App = {
-  role: 'host', // 'host' | 'guest'
-  roomCode: null,
-  connected: false,
-  isPlaying: false,
-  songIndex: 0,
-  currentTime: 0, // seconds (simulated)
-  playlistId: null,
-  tracks: [],
-  ticker: null,
-  syncTimer: null,
-};
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connectionStatus');
+            const indicatorEl = document.getElementById('connectionIndicator');
+            
+            if (status === 'connected') {
+                statusEl.textContent = '🎉 Friend connected! Ready to sync';
+                statusEl.className = 'status connected';
+                indicatorEl.textContent = '🔗 Connected';
+                indicatorEl.className = 'connection-indicator connected';
+            } else if (status === 'waiting') {
+                statusEl.textContent = '🔍 Waiting for friend to join...';
+                statusEl.className = 'status waiting';
+                indicatorEl.textContent = '⏳ Waiting';
+                indicatorEl.className = 'connection-indicator';
+            } else {
+                indicatorEl.textContent = '❌ Disconnected';
+                indicatorEl.className = 'connection-indicator disconnected';
+            }
+        }
 
-// Demo tracks generator from playlist URL (no API calls)
-function tracksFromPlaylist(url){
-  const listIdMatch = /[?&]list=([a-zA-Z0-9_-]+)/.exec(url||'');
-  const listId = listIdMatch ? listIdMatch[1] : 'DEMO_LIST';
-  const base = [
-    { id: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up', artist: 'Rick Astley', duration: 213 },
-    { id: 'fJ9rUzIMcZQ', title: 'Bohemian Rhapsody', artist: 'Queen', duration: 354 },
-    { id: '3JZ_D3ELwOQ', title: 'See You Again', artist: 'Wiz Khalifa ft. Charlie Puth', duration: 230 },
-    { id: 'kJQP7kiw5Fk', title: 'Despacito', artist: 'Luis Fonsi ft. Daddy Yankee', duration: 281 },
-    { id: 'CevxZvSJLk8', title: 'Roar', artist: 'Katy Perry', duration: 221 },
-  ];
-  // Map into playlist-flavored links
-  return base.map((t,i)=>({
-    ...t,
-    url: `https://www.youtube.com/watch?v=${t.id}&list=${listId}&index=${i+1}`,
-  }));
-}
+        function updateLatencyDisplay() {
+            document.getElementById('latencyDisplay').textContent = `${connectionLatency}ms`;
+        }
 
-// -------------------------------
-// UI Rendering
-// -------------------------------
-function setStatus(text, type='wait'){
-  document.getElementById('statusText').textContent = text;
-  const dot = document.getElementById('statusDot');
-  dot.classList.remove('wait','ok','err'); dot.classList.add(type);
-}
+        function initializePlayer() {
+            console.log('🎵 Initializing enhanced player...');
+            isPlayerReady = true;
+            updateSongInfo();
+            updatePlaylistDisplay();
+            startSyncTimer();
+            startProgressUpdate();
+            
+            // Initialize connection indicator
+            updateConnectionStatus(isHost ? 'waiting' : 'connected');
+        }
 
-function renderPlaylist(){
-  const wrap = document.getElementById('playlist'); wrap.innerHTML='';
-  App.tracks.forEach((t, i)=>{
-    const el = document.createElement('div'); el.className = 'track' + (i===App.songIndex?' active':'');
-    el.innerHTML = `
-      <div class="idx">${String(i+1).padStart(2,'0')}</div>
-      <div style="flex:1">
-        <div class="title">${t.title}</div>
-        <div class="artist">${t.artist}</div>
-      </div>
-      <div style="opacity:.8">${fmtTime(t.duration)}</div>`;
-    el.onclick = ()=>selectSong(i, true);
-    wrap.appendChild(el);
-  });
-}
+        function startSyncTimer() {
+            setInterval(() => {
+                if (isPlaying) {
+                    currentTime += 1;
+                    if (currentTime >= totalTime) {
+                        nextSong();
+                    }
+                    updateTimeDisplay();
+                }
+            }, 1000);
+        }
 
-function highlightActive(){
-  $$('#playlist .track').forEach((el, i)=>{
-    if(i===App.songIndex) el.classList.add('active'); else el.classList.remove('active');
-  });
-}
+        function startProgressUpdate() {
+            setInterval(() => {
+                updateProgressBar();
+            }, 100);
+        }
 
-function fmtTime(sec){ const m = Math.floor(sec/60), s = String(Math.floor(sec%60)).padStart(2,'0'); return `${m}:${s}`; }
+        function updateTimeDisplay() {
+            const current = formatTime(currentTime);
+            const total = formatTime(totalTime);
+            const timer = document.getElementById('syncTimer');
+            
+            document.getElementById('currentTime').textContent = current;
+            document.getElementById('totalTime').textContent = total;
+            timer.textContent = current;
+        }
 
-function loadCurrentVideo(emitSync=false){
-  const t = App.tracks[App.songIndex];
-  document.getElementById('songTitle').textContent = t.title;
-  document.getElementById('songArtist').textContent = t.artist;
-  document.getElementById('nowText').textContent = `Track ${App.songIndex+1} • ${fmtTime(App.currentTime)} / ${fmtTime(t.duration)}`;
-  highlightActive();
-  if(emitSync){ mockSocket.broadcast('song:change', { index: App.songIndex, time:0 }); }
-}
+        function updateProgressBar() {
+            const progress = (currentTime / totalTime) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+        }
 
-function openInYouTube(){ const t = App.tracks[App.songIndex]; window.open(t.url, '_blank'); }
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
 
-// -------------------------------
-// Controls
-// -------------------------------
-function togglePlayPause(emitSync=true){
-  App.isPlaying = !App.isPlaying;
-  document.getElementById('playBtn').textContent = App.isPlaying ? '⏸' : '▶';
-  const disc = document.getElementById('disc');
-  const waves = document.getElementById('waves');
-  if(App.isPlaying){ disc.classList.add('playing'); waves.classList.add('playing'); setStatus('Connected • Playing', 'ok'); }
-  else { disc.classList.remove('playing'); waves.classList.remove('playing'); setStatus('Connected • Paused', 'ok'); }
-  if(emitSync) mockSocket.broadcast('transport:toggle', { isPlaying: App.isPlaying, time: App.currentTime, index: App.songIndex });
-}
+        function updateSongInfo() {
+            const currentTrack = mockPlaylist[currentVideoIndex];
+            document.getElementById('currentSong').textContent = currentTrack.title;
+            totalTime = parseDuration(currentTrack.duration);
+            currentTime = 0;
+            updateTimeDisplay();
+        }
 
-function nextSong(emitSync=true){
-  App.songIndex = (App.songIndex + 1) % App.tracks.length; App.currentTime = 0; loadCurrentVideo(false);
-  if(emitSync) mockSocket.broadcast('song:change', { index: App.songIndex, time: 0 });
-}
-function previousSong(emitSync=true){
-  App.songIndex = (App.songIndex - 1 + App.tracks.length) % App.tracks.length; App.currentTime = 0; loadCurrentVideo(false);
-  if(emitSync) mockSocket.broadcast('song:change', { index: App.songIndex, time: 0 });
-}
-function selectSong(i, emitSync=true){ App.songIndex = i; App.currentTime=0; loadCurrentVideo(false); if(emitSync) mockSocket.broadcast('song:change', { index: i, time:0 }); }
+        function parseDuration(duration) {
+            const parts = duration.split(':');
+            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
 
-// Simulated clock ticking while playing
-function startTicker(){
-  stopTicker();
-  App.ticker = setInterval(()=>{
-    if(!App.isPlaying) return;
-    const t = App.tracks[App.songIndex];
-    App.currentTime += 1; if(App.currentTime >= t.duration){ nextSong(true); return; }
-    document.getElementById('nowText').textContent = `Track ${App.songIndex+1} • ${fmtTime(App.currentTime)} / ${fmtTime(t.duration)}`;
-  }, 1000);
-}
-function stopTicker(){ if(App.ticker) clearInterval(App.ticker); }
+        function updatePlaylistDisplay() {
+            const songItems = document.querySelectorAll('#songList li');
+            songItems.forEach((item, index) => {
+                if (index === currentVideoIndex) {
+                    item.className = 'current';
+                } else {
+                    item.className = '';
+                }
+            });
+        }
 
-// -------------------------------
-// Time Sync (every 5s)
-// -------------------------------
-function startSyncLoop(){
-  stopSyncLoop();
-  App.syncTimer = setInterval(()=>{
-    // Host drives periodic sync; guest mirrors
-    if(App.role === 'host'){
-      mockSocket.broadcast('sync:time', { index: App.songIndex, time: App.currentTime, isPlaying: App.isPlaying });
-    }
-  }, 5000);
-}
-function stopSyncLoop(){ if(App.syncTimer) clearInterval(App.syncTimer); }
+        function loadCurrentVideo() {
+            const currentTrack = mockPlaylist[currentVideoIndex];
+            const videoDisplay = document.getElementById('videoDisplay');
+            
+            // Enhanced video loading with sync parameters
+            const autoplay = isPlaying ? 1 : 0;
+            const startTime = Math.floor(currentTime);
+            
+            videoDisplay.innerHTML = `
+                <iframe 
+                    src="${currentTrack.embedUrl}&autoplay=${autoplay}&start=${startTime}&controls=1&modestbranding=1&rel=0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+            `;
+            
+            updateSongInfo();
+            updatePlaylistDisplay();
+        }
 
-// -------------------------------
-// Room Flow
-// -------------------------------
-function createRoom(){
-  App.role = 'host';
-  const code = String(Math.floor(100000 + Math.random()*900000));
-  App.roomCode = code; document.getElementById('roomCode').textContent = code;
-  document.getElementById('setupCard').classList.add('hidden');
-  document.getElementById('roomCard').classList.remove('hidden');
-  setStatus('Waiting for partner…','wait');
+        function togglePlayPause() {
+            if (!isPlayerReady) return;
+            
+            isPlaying = !isPlaying;
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            
+            if (isPlaying) {
+                playPauseBtn.textContent = '⏸';
+                playPauseBtn.classList.add('active');
+                loadCurrentVideo();
+                
+                if (isHost) {
+                    const syncData = {
+                        videoIndex: currentVideoIndex,
+                        timestamp: Date.now(),
+                        currentTime: currentTime,
+                        action: 'play'
+                    };
+                    mockSocket.emit('sync-play', syncData);
+                }
+            } else {
+                playPauseBtn.textContent = '▶';
+                playPauseBtn.classList.remove('active');
+                
+                if (isHost) {
+                    const syncData = {
+                        timestamp: Date.now(),
+                        currentTime: currentTime,
+                        action: 'pause'
+                    };
+                    mockSocket.emit('sync-pause', syncData);
+                }
+            }
+            
+            console.log(`🎵 ${isPlaying ? 'Playing' : 'Paused'}: ${mockPlaylist[currentVideoIndex].title} at ${formatTime(currentTime)}`);
+        }
 
-  const url = document.getElementById('playlistInput').value.trim();
-  App.tracks = tracksFromPlaylist(url);
-  renderPlaylist();
-  loadCurrentVideo();
-  mockSocket.join(code);
-  startTicker(); startSyncLoop();
-}
-
-function joinFlow(){ document.getElementById('joinRow').style.display = 'flex'; document.getElementById('joinCode').focus(); }
-
-function joinRoom(){
-  const code = document.getElementById('joinCode').value.replace(/\D/g,'').slice(0,6);
-  if(code.length!==6){ alert('Enter a 6-digit room code'); return; }
-  App.role = 'guest';
-  App.roomCode = code; document.getElementById('roomCode').textContent = code;
-  document.getElementById('setupCard').classList.add('hidden');
-  document.getElementById('roomCard').classList.remove('hidden');
-
-  // For guest, build demo tracks too (they will be overwritten by sync events from host);
-  const url = document.getElementById('playlistInput').value.trim();
-  App.tracks = tracksFromPlaylist(url);
-  renderPlaylist();
-  loadCurrentVideo();
-
-  mockSocket.join(code);
-  startTicker(); startSyncLoop();
-}
-
-// -------------------------------
-// Socket Event Handlers (mirror partner actions instantly)
-// -------------------------------
-mockSocket.on('any', (msg)=>{}); // placeholder
-mockSocket.on('event', (msg)=>{});
-
-mockSocket.on('peer:joined', ({})=>{
-  if(App.role==='host'){
-    setStatus('Partner connected','ok'); App.connected = true;
-    // Share current state immediately
-    mockSocket.broadcast('state:init', { tracks: App.tracks, index: App.songIndex, time: App.currentTime, isPlaying: App.isPlaying });
-  } else {
-    setStatus('Connected','ok'); App.connected = true;
-  }
-});
-
-mockSocket.on('state:init', ({ payload })=>{
-  if(App.role==='guest'){
-    App.tracks = payload.tracks; renderPlaylist();
-    App.songIndex = payload.index; App.currentTime = payload.time; App.isPlaying = payload.isPlaying;
-    loadCurrentVideo(false);
-    // apply play/pause visuals
-    const isPlaying = App.isPlaying; App.isPlaying=false; togglePlayPause(false); if(!isPlaying) togglePlayPause(false);
-  }
-});
-
-mockSocket.on('transport:toggle', ({ payload })=>{
-  if(payload.index!==undefined) App.songIndex = payload.index;
-  App.currentTime = payload.time; const was = App.isPlaying; App.isPlaying = payload.isPlaying;
-  if(App.isPlaying !== was){ togglePlayPause(false); }
-  loadCurrentVideo(false);
-});
-
-mockSocket.on('song:change', ({ payload })=>{
-  App.songIndex = payload.index; App.currentTime = payload.time || 0; loadCurrentVideo(false);
-});
-
-mockSocket.on('sync:time', ({ payload })=>{
-  if(App.role === 'guest'){
-    if(payload.index !== App.songIndex){ App.songIndex = payload.index; App.currentTime = payload.time; loadCurrentVideo(false); }
-    // nudge local time toward host within tolerance
-    const drift = payload.time - App.currentTime;
-    if(Math.abs(drift) > 1){ App.currentTime = payload.time; }
-    if(App.isPlaying !== payload.isPlaying){ App.isPlaying = payload.isPlaying; togglePlayPause(false); }
-  }
-});
-
-// -------------------------------
-// Startup
-// -------------------------------
-window.addEventListener('load', ()=>{
-  // keyboard: space = play/pause
-  window.addEventListener('keydown', (e)=>{
-    if(e.code==='Space' && !e.repeat){ e.preventDefault(); togglePlayPause(true); }
-  });
-});
-</script>
-</body>
-</html>
+        function nextSong() {
+            if (!isPlayerReady) return;
+            
+            currentVideoIndex = (currentVideoIndex + 1) % mockPlaylist.length;
+            currentTime = 0;
