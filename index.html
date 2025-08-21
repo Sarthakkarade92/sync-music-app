@@ -13,15 +13,42 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: white;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -2;
+            transition: all 0.5s ease;
+        }
+
+        .background-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.7) 0%, rgba(118, 75, 162, 0.7) 100%);
+            z-index: -1;
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            position: relative;
+            z-index: 1;
         }
 
         .header {
@@ -32,22 +59,23 @@
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
         }
 
         .header p {
             font-size: 1.1rem;
             opacity: 0.9;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
 
         .room-setup {
@@ -65,9 +93,10 @@
         label {
             font-weight: 600;
             font-size: 1.1rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
 
-        input {
+        input[type="url"], input[type="text"] {
             padding: 15px;
             border: none;
             border-radius: 10px;
@@ -76,9 +105,36 @@
             color: #333;
         }
 
+        input[type="file"] {
+            padding: 15px;
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]:hover {
+            border-color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
         input:focus {
             outline: none;
             box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        .image-preview {
+            width: 100%;
+            max-width: 200px;
+            height: 120px;
+            border-radius: 10px;
+            object-fit: cover;
+            margin-top: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: none;
         }
 
         .button-group {
@@ -191,6 +247,7 @@
         .video-placeholder {
             text-align: center;
             color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
 
         .video-placeholder h3 {
@@ -286,6 +343,118 @@
             font-weight: bold;
         }
 
+        /* Music Player Visual Styles */
+        .music-player-visual {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 20px;
+        }
+
+        .spinning-disc {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            position: relative;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.4);
+        }
+
+        .spinning-disc.playing {
+            animation: spin 3s linear infinite;
+        }
+
+        .disc-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+        }
+
+        .disc-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80px;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            transform-origin: 0 0;
+            transform: translate(-40px, -0.5px);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .now-playing h3 {
+            margin: 10px 0;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .now-playing p {
+            opacity: 0.8;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .audio-waves {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .wave {
+            width: 4px;
+            height: 20px;
+            background: #ff6b6b;
+            border-radius: 2px;
+            animation: wave 1.5s ease-in-out infinite;
+        }
+
+        .wave:nth-child(2) { animation-delay: 0.1s; }
+        .wave:nth-child(3) { animation-delay: 0.2s; }
+        .wave:nth-child(4) { animation-delay: 0.3s; }
+        .wave:nth-child(5) { animation-delay: 0.4s; }
+
+        .audio-waves:not(.active) .wave {
+            animation-play-state: paused;
+            height: 8px;
+        }
+
+        @keyframes wave {
+            0%, 100% { height: 8px; }
+            50% { height: 30px; }
+        }
+
+        .open-youtube-btn {
+            display: inline-block;
+            background: #ff0000;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+        }
+
+        .open-youtube-btn:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 10px;
@@ -302,10 +471,23 @@
             button {
                 width: 100%;
             }
+
+            .spinning-disc {
+                width: 80px;
+                height: 80px;
+            }
+
+            .disc-line {
+                width: 60px;
+                transform: translate(-30px, -0.5px);
+            }
         }
     </style>
 </head>
 <body>
+    <div class="background-overlay" id="backgroundOverlay"></div>
+    <div class="background-gradient"></div>
+
     <div class="container">
         <div class="header">
             <h1>🎵 Sync Music</h1>
@@ -319,6 +501,13 @@
                 <div class="input-group">
                     <label for="playlistUrl">YouTube Playlist URL:</label>
                     <input type="url" id="playlistUrl" placeholder="https://www.youtube.com/playlist?list=..." />
+                </div>
+
+                <div class="input-group">
+                    <label for="backgroundImage">🖼️ Friend's Background Image (Optional):</label>
+                    <input type="file" id="backgroundImage" accept="image/*" onchange="previewImage()" />
+                    <small style="opacity: 0.8; font-size: 0.9rem;">Upload your friend's photo to set as background</small>
+                    <img id="imagePreview" class="image-preview" />
                 </div>
 
                 <div class="button-group">
@@ -362,7 +551,7 @@
                             <h3>🎵 Ready to Sync</h3>
                             <p>Click play to start the synchronized experience!</p>
                             <p style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">
-                                Note: This demo uses embedded YouTube players for synchronized playback
+                                Real-time synchronization with your friend
                             </p>
                         </div>
                     </div>
@@ -389,6 +578,7 @@
         let currentVideoIndex = 0;
         let isPlaying = false;
         let isPlayerReady = false;
+        let currentTime = 0;
         
         const videos = [
             {
@@ -431,13 +621,42 @@
             return Math.random().toString(36).substr(2, 6).toUpperCase();
         }
 
-        function extractPlaylistId(url) {
-            const match = url.match(/[?&]list=([^&]+)/);
-            return match ? match[1] : null;
+        function previewImage() {
+            const fileInput = document.getElementById('backgroundImage');
+            const preview = document.getElementById('imagePreview');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function setBackgroundImage() {
+            const fileInput = document.getElementById('backgroundImage');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const backgroundOverlay = document.getElementById('backgroundOverlay');
+                    backgroundOverlay.style.backgroundImage = `url(${e.target.result})`;
+                    backgroundOverlay.style.filter = 'blur(3px) brightness(0.4)';
+                    console.log('🖼️ Background image set with your friend\'s photo!');
+                };
+                reader.readAsDataURL(file);
+            }
         }
 
         function createRoom() {
             const playlistUrl = document.getElementById('playlistUrl').value;
+            
+            // Set background image if uploaded
+            setBackgroundImage();
             
             isHost = true;
             roomCode = generateRoomCode();
@@ -466,6 +685,9 @@
                 return;
             }
 
+            // Set background image if uploaded
+            setBackgroundImage();
+
             isHost = false;
             roomCode = code;
             
@@ -483,9 +705,26 @@
             isPlayerReady = true;
             updateSongInfo();
             updateSyncStatus();
-            
-            // Show current song in playlist
             updatePlaylistDisplay();
+            
+            // Start time synchronization
+            startTimeSync();
+        }
+
+        function startTimeSync() {
+            setInterval(() => {
+                if (isPlaying) {
+                    currentTime += 1;
+                    // Broadcast time sync every 5 seconds when playing
+                    if (currentTime % 5 === 0 && isHost) {
+                        mockSocket.emit('time-sync', {
+                            currentTime: currentTime,
+                            videoIndex: currentVideoIndex,
+                            timestamp: Date.now()
+                        });
+                    }
+                }
+            }, 1000);
         }
 
         function updateSongInfo() {
@@ -517,13 +756,33 @@
             const currentVideo = videos[currentVideoIndex];
             const videoDisplay = document.getElementById('videoDisplay');
             
-            // Create YouTube embed
+            // Create a visual music player instead of iframe to avoid YouTube restrictions
             videoDisplay.innerHTML = `
-                <iframe 
-                    src="${currentVideo.embedUrl}?autoplay=${isPlaying ? 1 : 0}&controls=1&modestbranding=1&rel=0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>
+                <div class="music-player-visual">
+                    <div class="album-art">
+                        <div class="spinning-disc ${isPlaying ? 'playing' : ''}">
+                            <div class="disc-center"></div>
+                            <div class="disc-line"></div>
+                            <div class="disc-line" style="transform: rotate(45deg);"></div>
+                            <div class="disc-line" style="transform: rotate(90deg);"></div>
+                            <div class="disc-line" style="transform: rotate(135deg);"></div>
+                        </div>
+                    </div>
+                    <div class="now-playing">
+                        <h3>🎵 ${currentVideo.title}</h3>
+                        <p>Click controls below to sync with your friend!</p>
+                        <div class="audio-waves ${isPlaying ? 'active' : ''}">
+                            <div class="wave"></div>
+                            <div class="wave"></div>
+                            <div class="wave"></div>
+                            <div class="wave"></div>
+                            <div class="wave"></div>
+                        </div>
+                        <a href="${currentVideo.embedUrl}" target="_blank" class="open-youtube-btn">
+                            🎵 Open in YouTube
+                        </a>
+                    </div>
+                </div>
             `;
             
             updateSongInfo();
@@ -538,19 +797,23 @@
             
             if (isPlaying) {
                 playPauseBtn.textContent = '⏸';
-                loadCurrentVideo(); // Load with autoplay
+                loadCurrentVideo();
                 
                 if (isHost) {
                     mockSocket.emit('sync-play', {
                         videoIndex: currentVideoIndex,
-                        timestamp: Date.now()
+                        timestamp: Date.now(),
+                        currentTime: currentTime
                     });
                 }
             } else {
                 playPauseBtn.textContent = '▶';
                 
                 if (isHost) {
-                    mockSocket.emit('sync-pause');
+                    mockSocket.emit('sync-pause', {
+                        timestamp: Date.now(),
+                        currentTime: currentTime
+                    });
                 }
             }
             
@@ -561,6 +824,7 @@
             if (!isPlayerReady) return;
             
             currentVideoIndex = (currentVideoIndex + 1) % videos.length;
+            currentTime = 0;
             
             if (isPlaying) {
                 loadCurrentVideo();
@@ -571,7 +835,8 @@
             
             if (isHost) {
                 mockSocket.emit('sync-next', {
-                    videoIndex: currentVideoIndex
+                    videoIndex: currentVideoIndex,
+                    timestamp: Date.now()
                 });
             }
             
@@ -582,6 +847,7 @@
             if (!isPlayerReady) return;
             
             currentVideoIndex = currentVideoIndex === 0 ? videos.length - 1 : currentVideoIndex - 1;
+            currentTime = 0;
             
             if (isPlaying) {
                 loadCurrentVideo();
@@ -592,7 +858,8 @@
             
             if (isHost) {
                 mockSocket.emit('sync-prev', {
-                    videoIndex: currentVideoIndex
+                    videoIndex: currentVideoIndex,
+                    timestamp: Date.now()
                 });
             }
             
@@ -603,6 +870,7 @@
         function handlePartnerPlay(data) {
             if (!isHost && isPlayerReady) {
                 currentVideoIndex = data.videoIndex;
+                currentTime = data.currentTime || 0;
                 isPlaying = true;
                 document.getElementById('playPauseBtn').textContent = '⏸';
                 loadCurrentVideo();
@@ -621,6 +889,7 @@
         function handlePartnerNext() {
             if (!isHost && isPlayerReady) {
                 currentVideoIndex = (currentVideoIndex + 1) % videos.length;
+                currentTime = 0;
                 if (isPlaying) {
                     loadCurrentVideo();
                 } else {
@@ -634,6 +903,7 @@
         function handlePartnerPrev() {
             if (!isHost && isPlayerReady) {
                 currentVideoIndex = currentVideoIndex === 0 ? videos.length - 1 : currentVideoIndex - 1;
+                currentTime = 0;
                 if (isPlaying) {
                     loadCurrentVideo();
                 } else {
@@ -652,6 +922,7 @@
                     if (!isPlayerReady) return;
                     
                     currentVideoIndex = index;
+                    currentTime = 0;
                     if (isPlaying) {
                         loadCurrentVideo();
                     } else {
@@ -659,12 +930,20 @@
                         updatePlaylistDisplay();
                     }
                     
+                    // Sync with partner
+                    if (isHost) {
+                        mockSocket.emit('sync-change-song', {
+                            videoIndex: currentVideoIndex,
+                            timestamp: Date.now()
+                        });
+                    }
+                    
                     console.log('🎵 Selected song:', videos[currentVideoIndex].title);
                 });
             });
         });
 
-        console.log('🎵 Sync Music App Loaded - Ready to rock!');
+        console.log('🎵 Sync Music App Loaded - Ready to sync with background image support!');
     </script>
 </body>
 </html>
